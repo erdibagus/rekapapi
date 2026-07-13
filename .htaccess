@@ -15,8 +15,4 @@ Options -Indexes
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# Sembunyikan file sensitif
-<FilesMatch "(^\.htaccess|database\.php|\.env)$">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
+
