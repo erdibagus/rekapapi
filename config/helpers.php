@@ -13,7 +13,7 @@ function setCorsHeaders(): void {
 
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
     if (in_array($origin, $allowed_origins, true)) {
-        header("Access-Control-Allow-Origin: $origin");
+        header("Access-Control-Allow-Origin: *");
     } else {
         // Fallback: izinkan semua saat development lokal
         header("Access-Control-Allow-Origin: *");
