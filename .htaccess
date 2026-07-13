@@ -1,0 +1,22 @@
+# Apache .htaccess untuk RekapBNP WiFi API
+# Mengaktifkan CORS dan URL routing
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /rekapwifi-api/
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Sembunyikan file sensitif
+<FilesMatch "(^\.htaccess|database\.php|\.env)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
