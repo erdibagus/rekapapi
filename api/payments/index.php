@@ -181,7 +181,7 @@ function generatePaymentsForMonth(PDO $db, int $bulan, int $tahun): int {
 function sendWhatsAppNotification(array $row): bool {
     $noHp = preg_replace('/\D/', '', $row['telepon'] ?? '');
     if (empty($noHp)) return false;
-    if (str_starts_with($noHp, '0')) {
+    if (substr($noHp, 0, 1) === '0') {
         $noHp = '62' . substr($noHp, 1);
     }
 
