@@ -198,7 +198,6 @@ function sendWhatsAppNotification(array $row): bool {
         "📦 Paket   : {$row['paket_nama']}\n" .
         "📅 Periode : {$namaBulan} {$row['tahun']}\n" .
         "🗓️ Tgl Bayar: {$tglBayar}\n" .
-        "💰 Nominal : {$nominal}\n\n" .
         "Terima kasih telah membayar tepat waktu! 🙏\n" .
         "_— BNPWiFi_";
 
