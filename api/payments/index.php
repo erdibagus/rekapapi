@@ -7,7 +7,7 @@
 // PUT  /api/payments/?id=&resend_wa=1 → kirim ulang WA
 // POST /api/payments/generate        → generate bulan baru
 // =====================================================
-
+date_default_timezone_set(Asia/Jakarta);
 require_once '../../config/database.php';
 require_once '../../config/helpers.php';
 
@@ -188,7 +188,7 @@ function sendWhatsAppNotification(array $row): bool {
     $namaBulan = getNamaBulanPhp((int)$row['bulan']);
     $nominal   = 'Rp ' . number_format((int)$row['nominal'], 0, ',', '.');
     $tglBayar  = !empty($row['tgl_bayar'])
-        ? date('d F Y', strtotime($row['tgl_bayar']))
+        ? formatTanggalIndonesia($row['tgl_bayar'])
         : '-';
 
     $pesan =
@@ -202,6 +202,24 @@ function sendWhatsAppNotification(array $row): bool {
         "_— BNPWiFi_";
 
     $payload = json_encode(['to' => $noHp, 'message' => $pesan]);
+    
+    //ping server wa
+    // Cek koneksi WA API
+    $ping = curl_init('https://bnp.valentine.biz.id/wabot/ping');
+    curl_setopt_array($ping, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 5,
+    ]);
+    
+    $pingResponse = curl_exec($ping);
+    $pingError    = curl_error($ping);
+    $httpCode     = curl_getinfo($ping, CURLINFO_HTTP_CODE);
+    curl_close($ping);
+    
+    // Gagal ping atau respon bukan "OK"
+    if ($pingError || $httpCode !== 200 || trim($pingResponse) !== 'OK') {
+        return false;
+    }
 
     $ch = curl_init('https://bnp.valentine.biz.id/wabot/send-message');
     curl_setopt_array($ch, [
@@ -230,4 +248,17 @@ function getNamaBulanPhp(int $bulan): string {
         9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
     ];
     return $nama[$bulan] ?? '';
+}
+
+function formatTanggalIndonesia(string $tanggal): string
+{
+    if (empty($tanggal)) {
+        return '-';
+    }
+
+    $timestamp = strtotime($tanggal);
+
+    return date('d', $timestamp) . ' ' .
+           getNamaBulanPhp((int)date('n', $timestamp)) . ' ' .
+           date('Y', $timestamp);
 }
