@@ -201,43 +201,50 @@ function sendWhatsAppNotification(array $row): bool {
         "Terima kasih telah membayar tepat waktu! 🙏\n" .
         "_— BNPWiFi_";
 
-    $payload = json_encode(['to' => $noHp, 'message' => $pesan]);
-    
-    //ping server wa
-    // Cek koneksi WA API
-    $ping = curl_init('https://bnp.valentine.biz.id/wabot/ping');
-    curl_setopt_array($ping, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 5,
+    $payload = json_encode([
+        'to'      => $noHp,
+        'message' => $pesan
     ]);
-    
-    $pingResponse = curl_exec($ping);
-    $pingError    = curl_error($ping);
-    $httpCode     = curl_getinfo($ping, CURLINFO_HTTP_CODE);
-    curl_close($ping);
-    
-    // Gagal ping atau respon bukan "OK"
-    if ($pingError || $httpCode !== 200 || trim($pingResponse) !== 'OK') {
-        return false;
-    }
 
-    $ch = curl_init('https://bnp.valentine.biz.id/wabot/send-message');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $payload,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-        CURLOPT_TIMEOUT        => 15,
-    ]);
-    $response = curl_exec($ch);
-    $err      = curl_error($ch);
-    curl_close($ch);
+    $url = 'https://bnp.valentine.biz.id/wabot/send-message';
 
-    if ($err || $response === false) return false;
+    $maxRetry = 2; // ulangi 2 kali jika gagal
+    $attempt = 0;
 
-    $json = json_decode($response, true);
-    // API WA mengembalikan: {"status": true, "message": "Pesan berhasil dikirim."}
-    return isset($json['status']) && $json['status'] === true;
+    do {
+        $attempt++;
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT        => 15,
+        ]);
+
+        $response = curl_exec($ch);
+        $err      = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        curl_close($ch);
+
+        if (!$err && $response !== false && $httpCode === 200) {
+            $json = json_decode($response, true);
+
+            if (!empty($json['status']) && $json['status'] === true) {
+                return true;
+            }
+        }
+
+        // Tunggu 1 detik sebelum mencoba lagi
+        if ($attempt <= $maxRetry) {
+            sleep(1);
+        }
+
+    } while ($attempt <= $maxRetry);
+
+    return false;
 }
 
 // ───── Helper: Nama Bulan (PHP) ────────────────────
