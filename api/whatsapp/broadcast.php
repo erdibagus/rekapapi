@@ -68,7 +68,7 @@ if ($jenis === 'gangguan_internet') {
         $templatePesan .= "📝 Keterangan: {$pesanTambahan}\n\n";
     }
     $templatePesan .=
-        "Terima kasih atas kesabaran dan pengertian Anda 🙏\n" .
+        "Terima kasih atas kesabaran dan pengertiannya 🙏\n" .
         "_— BNPWiFi_";
 } else {
     // pemeliharaan
