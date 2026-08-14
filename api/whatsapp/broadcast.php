@@ -91,38 +91,38 @@ $berhasil  = 0;
 $gagal     = 0;
 $hasil     = [];
 
-kirimWABroadcast("628562774511", $templatePesan);
+kirimWABroadcast("628562774511", $jenis);
 
-// foreach ($pelangganList as $pel) {
-//     $noHp = preg_replace('/\D/', '', $pel['telepon'] ?? '');
-//     if (empty($noHp)) {
-//         $gagal++;
-//         $hasil[] = ['nama' => $pel['nama'], 'status' => 'skip', 'alasan' => 'No. HP kosong'];
-//         continue;
-//     }
-//     if (substr($noHp, 0, 1) === '0') {
-//         $noHp = '62' . substr($noHp, 1);
-//     }
+foreach ($pelangganList as $pel) {
+    $noHp = preg_replace('/\D/', '', $pel['telepon'] ?? '');
+    if (empty($noHp)) {
+        $gagal++;
+        $hasil[] = ['nama' => $pel['nama'], 'status' => 'skip', 'alasan' => 'No. HP kosong'];
+        continue;
+    }
+    if (substr($noHp, 0, 1) === '0') {
+        $noHp = '62' . substr($noHp, 1);
+    }
 
-//     // Personalisasi pesan dengan nama pelanggan
-//     $pesanPersonal = str_replace(
-//         'Kepada Yth. Pelanggan *BNPWiFi*,',
-//         "Kepada Yth. *{$pel['nama']}*,",
-//         $templatePesan
-//     );
+    // Personalisasi pesan dengan nama pelanggan
+    $pesanPersonal = str_replace(
+        'Kepada Yth. Pelanggan *BNPWiFi*,',
+        "Kepada Yth. *{$pel['nama']}*,",
+        $templatePesan
+    );
 
-//     $ok = kirimWABroadcast($noHp, $pesanPersonal);
-//     if ($ok) {
-//         $berhasil++;
-//         $hasil[] = ['nama' => $pel['nama'], 'status' => 'ok'];
-//     } else {
-//         $gagal++;
-//         $hasil[] = ['nama' => $pel['nama'], 'status' => 'gagal'];
-//     }
+    $ok = kirimWABroadcast($noHp, $pesanPersonal);
+    if ($ok) {
+        $berhasil++;
+        $hasil[] = ['nama' => $pel['nama'], 'status' => 'ok'];
+    } else {
+        $gagal++;
+        $hasil[] = ['nama' => $pel['nama'], 'status' => 'gagal'];
+    }
 
-//     // Jeda kecil antar pesan agar tidak dianggap spam
-//     usleep(500000); // 0.5 detik
-// }
+    // Jeda kecil antar pesan agar tidak dianggap spam
+    usleep(500000); // 0.5 detik
+}
 
 jsonResponse(true, "Broadcast selesai: {$berhasil} berhasil, {$gagal} gagal", [
     'total'    => count($pelangganList),
