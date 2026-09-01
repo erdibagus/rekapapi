@@ -178,16 +178,21 @@ function generatePaymentsForMonth(PDO $db, int $bulan, int $tahun): int {
 }
 
 // ───── Helper: Kirim WA dari Backend ───────────────
-function sendWhatsAppNotification(array $row): bool {
+function sendWhatsAppNotification(array $row): bool{
     $noHp = preg_replace('/\D/', '', $row['telepon'] ?? '');
-    if (empty($noHp)) return false;
+
+    if (empty($noHp)) {
+        return false;
+    }
+
     if (substr($noHp, 0, 1) === '0') {
         $noHp = '62' . substr($noHp, 1);
     }
 
     $namaBulan = getNamaBulanPhp((int)$row['bulan']);
     $nominal   = 'Rp ' . number_format((int)$row['nominal'], 0, ',', '.');
-    $tglBayar  = !empty($row['tgl_bayar'])
+
+    $tglBayar = !empty($row['tgl_bayar'])
         ? formatTanggalIndonesia($row['tgl_bayar'])
         : '-';
 
@@ -206,43 +211,33 @@ function sendWhatsAppNotification(array $row): bool {
         'message' => $pesan
     ]);
 
-    $url = 'http://localhost/wabot/send-message';
+    $url = 'https://bnp.valentine.biz.id/wabot/send-message';
 
-    $maxRetry = 0; // ulangi 2 kali jika gagal
-    $attempt = 0;
+    $ch = curl_init($url);
 
-    do {
-        $attempt++;
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json'
+        ],
+        CURLOPT_TIMEOUT        => 15,
+    ]);
 
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $payload,
-            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT        => 15,
-        ]);
+    $response = curl_exec($ch);
+    $err      = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        $response = curl_exec($ch);
-        $err      = curl_error($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-        curl_close($ch);
+    if (!$err && $response !== false && $httpCode === 200) {
+        $json = json_decode($response, true);
 
-        if (!$err && $response !== false && $httpCode === 200) {
-            $json = json_decode($response, true);
-
-            if (!empty($json['status']) && $json['status'] === true) {
-                return true;
-            }
+        if (!empty($json['status']) && $json['status'] === true) {
+            return true;
         }
-
-        // Tunggu 1 detik sebelum mencoba lagi
-        if ($attempt <= $maxRetry) {
-            sleep(1);
-        }
-
-    } while ($attempt <= $maxRetry);
+    }
 
     return false;
 }
