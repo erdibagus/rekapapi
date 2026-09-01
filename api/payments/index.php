@@ -206,7 +206,7 @@ function sendWhatsAppNotification(array $row): bool {
         'message' => $pesan
     ]);
 
-    $url = 'https://bnp.valentine.biz.id/wabot/send-message';
+    $url = 'http://localhost:3000/wabot/send-message';
 
     $maxRetry = 0; // ulangi 2 kali jika gagal
     $attempt = 0;
