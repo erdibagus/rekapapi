@@ -208,7 +208,7 @@ function sendWhatsAppNotification(array $row): bool {
 
     $url = 'https://bnp.valentine.biz.id/wabot/send-message';
 
-    $maxRetry = 2; // ulangi 2 kali jika gagal
+    $maxRetry = 0; // ulangi 2 kali jika gagal
     $attempt = 0;
 
     do {
