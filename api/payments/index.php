@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 // =====================================================
 // PAYMENTS API
-// GET  /api/payments/?bulan=&tahun=  → list rekap bulan
-// GET  /api/payments/?pelanggan_id=  → history 6 bulan
-// PUT  /api/payments/?id=            → tandai lunas / batalkan
-// PUT  /api/payments/?id=&resend_wa=1 → kirim ulang WA
-// POST /api/payments/generate        → generate bulan baru
+// GET  /api/payments/?bulan=&tahun=  â†’ list rekap bulan
+// GET  /api/payments/?pelanggan_id=  â†’ history 6 bulan
+// PUT  /api/payments/?id=            â†’ tandai lunas / batalkan
+// PUT  /api/payments/?id=&resend_wa=1 â†’ kirim ulang WA
+// POST /api/payments/generate        â†’ generate bulan baru
 // =====================================================
 date_default_timezone_set(Asia/Jakarta);
 require_once '../../config/database.php';
@@ -18,7 +18,7 @@ $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
-// ───── GET ─────────────────────────────────────────
+// â”€â”€â”€â”€â”€ GET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ($method === 'GET') {
     // History per pelanggan (6 bulan)
     if (isset($_GET['pelanggan_id'])) {
@@ -63,11 +63,11 @@ if ($method === 'GET') {
     jsonResponse(true, 'OK', $stmt->fetchAll());
 }
 
-// ───── PUT (Tandai Lunas / Batalkan / Resend WA) ───
+// â”€â”€â”€â”€â”€ PUT (Tandai Lunas / Batalkan / Resend WA) â”€â”€â”€
 if ($method === 'PUT') {
     if (!$id) jsonResponse(false, 'ID payment diperlukan', null, 400);
 
-    // ── Resend WA ──────────────────────────────────
+    // â”€â”€ Resend WA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (isset($_GET['resend_wa']) && $_GET['resend_wa'] == 1) {
         $row = $db->query("
             SELECT py.*, pl.nama AS pelanggan_nama, pl.telepon,
@@ -90,7 +90,7 @@ if ($method === 'PUT') {
         jsonResponse(true, $waSent ? 'Notifikasi WA berhasil dikirim ulang' : 'Gagal kirim WA', $row);
     }
 
-    // ── Tandai Lunas / Batalkan ────────────────────
+    // â”€â”€ Tandai Lunas / Batalkan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     $body       = getRequestBody();
     $lunas      = isset($body['lunas']) ? (bool)$body['lunas'] : null;
     $keterangan = $body['keterangan'] ?? null;
@@ -143,7 +143,7 @@ if ($method === 'PUT') {
     );
 }
 
-// ───── POST (Generate) ─────────────────────────────
+// â”€â”€â”€â”€â”€ POST (Generate) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ($method === 'POST') {
     $body  = getRequestBody();
     $bulan = isset($body['bulan']) ? (int)$body['bulan'] : (int)date('n');
@@ -155,14 +155,20 @@ if ($method === 'POST') {
 
 jsonResponse(false, 'Method tidak diizinkan', null, 405);
 
-// ───── Helper: Generate Payments ───────────────────
+// â”€â”€â”€â”€â”€ Helper: Generate Payments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function generatePaymentsForMonth(PDO $db, int $bulan, int $tahun): int {
-    $stmt = $db->query("
+    // Hanya generate untuk pelanggan yang sudah bergabung
+    // pada atau sebelum akhir bulan yang di-generate
+    $batasTanggal = date('Y-m-t', strtotime("$tahun-$bulan-01"));
+
+    $stmt = $db->prepare("
         SELECT p.id, pk.harga
         FROM pelanggan p
         JOIN pakets pk ON pk.id = p.paket_id
         WHERE p.status = 'aktif'
+          AND p.bergabung <= ?
     ");
+    $stmt->execute([$batasTanggal]);
     $customers = $stmt->fetchAll();
 
     $count = 0;
@@ -177,7 +183,7 @@ function generatePaymentsForMonth(PDO $db, int $bulan, int $tahun): int {
     return $count;
 }
 
-// ───── Helper: Kirim WA dari Backend ───────────────
+// â”€â”€â”€â”€â”€ Helper: Kirim WA dari Backend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function sendWhatsAppNotification(array $row): bool{
     $noHp = preg_replace('/\D/', '', $row['telepon'] ?? '');
 
@@ -197,14 +203,14 @@ function sendWhatsAppNotification(array $row): bool{
         : '-';
 
     $pesan =
-        "✅ *Konfirmasi Pembayaran WiFi*\n\n" .
+        "âœ… *Konfirmasi Pembayaran WiFi*\n\n" .
         "Halo, *{$row['pelanggan_nama']}*!\n\n" .
         "Pembayaran WiFi Anda telah kami terima.\n" .
-        "📦 Paket   : {$row['paket_nama']}\n" .
-        "📅 Periode : {$namaBulan} {$row['tahun']}\n" .
-        "🗓️ Tgl Bayar: {$tglBayar}\n" .
-        "Terima kasih telah membayar tepat waktu! 🙏\n" .
-        "_— BNPWiFi_";
+        "ðŸ“¦ Paket   : {$row['paket_nama']}\n" .
+        "ðŸ“… Periode : {$namaBulan} {$row['tahun']}\n" .
+        "ðŸ—“ï¸ Tgl Bayar: {$tglBayar}\n" .
+        "Terima kasih telah membayar tepat waktu! ðŸ™\n" .
+        "_â€” BNPWiFi_";
 
     $payload = json_encode([
         'to'      => $noHp,
@@ -242,7 +248,7 @@ function sendWhatsAppNotification(array $row): bool{
     return false;
 }
 
-// ───── Helper: Nama Bulan (PHP) ────────────────────
+// â”€â”€â”€â”€â”€ Helper: Nama Bulan (PHP) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getNamaBulanPhp(int $bulan): string {
     $nama = [
         1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
@@ -264,3 +270,4 @@ function formatTanggalIndonesia(string $tanggal): string
            getNamaBulanPhp((int)date('n', $timestamp)) . ' ' .
            date('Y', $timestamp);
 }
+
