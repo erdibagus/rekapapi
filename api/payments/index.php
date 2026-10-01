@@ -203,14 +203,14 @@ function sendWhatsAppNotification(array $row): bool{
         : '-';
 
     $pesan =
-        "âœ… *Konfirmasi Pembayaran WiFi*\n\n" .
+        "✅ *Konfirmasi Pembayaran WiFi*\n\n" .
         "Halo, *{$row['pelanggan_nama']}*!\n\n" .
         "Pembayaran WiFi Anda telah kami terima.\n" .
-        "ðŸ“¦ Paket   : {$row['paket_nama']}\n" .
-        "ðŸ“… Periode : {$namaBulan} {$row['tahun']}\n" .
-        "ðŸ—“ï¸ Tgl Bayar: {$tglBayar}\n" .
-        "Terima kasih telah membayar tepat waktu! ðŸ™\n" .
-        "_â€” BNPWiFi_";
+        "📦 Paket   : {$row['paket_nama']}\n" .
+        "📅 Periode : {$namaBulan} {$row['tahun']}\n" .
+        "🗓️ Tgl Bayar: {$tglBayar}\n" .
+        "Terima kasih telah membayar tepat waktu! 🙏\n" .
+        "_— BNPWiFi_";
 
     $payload = json_encode([
         'to'      => $noHp,
